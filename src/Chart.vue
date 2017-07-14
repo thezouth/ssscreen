@@ -6,48 +6,50 @@
 <script>
 import { stockService } from './service'
 import Plotly from 'plotly.js'
-  function convertDate(dateString) {
-    const arr = dateString.split('/')
-    return new Date(parseInt(arr[2]), parseInt(arr[1]) - 1, parseInt(arr[0]))
-  }
   export default {
     data () {
       return {}
     },
     methods: {
-      read() {
-        if (!this.quote) return;
-        stockService.get(`/historical/${this.quote}`).then(
-          (response) => {
-            const data = response.data.data
-            const chartData = {
-              x: data.sample_date.map( convertDate ),
-              close: data.close,
-              open: data.open,
-              low: data.low,
-              high: data.high,
-              type: 'ohlc'
+      render() {
+        if (!this.chartData) return;
+        const layout = {
+          showlegend: false,
+          xaxis: {
+            title: 'Date',
+            type: 'date',
+            rangeselector: {
+              x: 0,
+              y: 1.2,
+              xanchor: 'left',
+              font: {size:8},
+              buttons: [{
+                  step: 'month',
+                  stepmode: 'backward',
+                  count: 1,
+                  label: '1 month'
+              }, {
+                  step: 'month',
+                  stepmode: 'backward',
+                  count: 6,
+                  label: '6 months'
+              }, {
+                  step: 'all',
+                  label: 'All dates'
+              }],
             }
-            const layout = {
-              showlegend: false,
-              xaxis: {
-                title: 'Date',
-                type: 'date'
-              }
-            }
-            Plotly.newPlot(this.$el, [chartData], layout)
-            console.log(chartData)
           }
-        )
+        }
+        Plotly.newPlot(this.$el, [this.chartData], layout)
       }
     },
     mounted () {
-      this.read()
+      this.render()
     },
-    props: [ 'quote' ],
+    props: [ 'chartData' ],
     watch: { 
-      quote() {
-        this.read()
+      chartData() {
+        this.render()
       }
     }
   }

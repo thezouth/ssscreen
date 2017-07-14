@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 import csv
@@ -24,14 +24,15 @@ def intraday(symbol):
 
 @app.route('/historical/<symbol>')
 def historical(symbol):
-    resp = requests.get(f'{SETTRADE_URL}/corp/ipo/technical/chart.jsp?symbolType=s&period=240&mkt=A&stockName={symbol}&indexName=undefined&rdoChartType=1&cboTech1=RSI&cboTech2=None&chkMovAvg0=0&chkMovAvg1=0&chkMovAvg2=0',
+    count = request.args.get('count')
+    resp = requests.get(f'{SETTRADE_URL}/corp/ipo/technical/chart.jsp?symbolType=s&period={count}&mkt=A&stockName={symbol}&indexName=undefined&rdoChartType=1&cboTech1=RSI&cboTech2=None&chkMovAvg0=0&chkMovAvg1=0&chkMovAvg2=0',
         headers={'referer': f'{SETTRADE_URL}'})
     data = resp.text
 
     sample_date = re.search('sampleList = "(.+)";', data)[1].split(',')
-    open_price = re.search('detailList_0 = "(.+)";', data)[1].split(',')
+    high_price = re.search('detailList_0 = "(.+)";', data)[1].split(',')
     low_price = re.search('detailList_1 = "(.+)";', data)[1].split(',')
-    high_price = re.search('detailList_2 = "(.+)";', data)[1].split(',')
+    open_price = re.search('detailList_2 = "(.+)";', data)[1].split(',')
     close_price = re.search('detailList_3 = "(.+)";', data)[1].split(',')
     volume = list(map(int, re.search('volumeList = "(.+)";', data)[1].split(',')))
 
