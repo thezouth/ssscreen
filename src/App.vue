@@ -6,7 +6,7 @@
     <div><span>sample count: </span><input type="number" @keypress.enter="change" v-model="sampleCount"></input></div>
     <div><button name="search" @click="change">search</button></div>
     <hr/>
-    <div>
+    <div v-if="quote">
       <label v-for="(v, k) in {d: 'Day', w: 'Week', m: 'Month', y: 'Year'}"><input @change="timeframeChange" type="radio" v-model="timeframe" :value="k"></input>{{ v }}</label>
     </div>
     <chart :chartData="chartData" v-show="quote"></chart>
@@ -21,6 +21,12 @@ import chart from './Chart.vue'
 function convertDate(dateString) {
   const arr = dateString.split('/')
   return new Date(parseInt(arr[2]), parseInt(arr[1]) - 1, parseInt(arr[0]))
+}
+
+function setChartData(component, data) {
+  component.chartData = data
+  component.chartData.x = data.date
+  component.chartData.type = 'ohlc'
 }
 
 export default {
@@ -56,28 +62,15 @@ export default {
       )
     },
     timeframeChange() {
+      const _setChartData = (data) => setChartData(this, data)
       if (this.timeframe === 'd') {
-        this.chartData = this.rawData
-        this.chartData.x = this.rawData.date
-        this.chartData.type = 'ohlc'
+        _setChartData(this.rawData)
       } else if (this.timeframe === 'w') {
-        aggregate(toWeek, this.rawData).then( (data) => {
-          this.chartData = data
-          this.chartData.x = data.date
-          this.chartData.type = 'ohlc'
-        })
+        aggregate(toWeek, this.rawData).then( _setChartData )
       } else if (this.timeframe === 'm') {
-        aggregate(toMonth, this.rawData).then( (data) => {
-          this.chartData = data
-          this.chartData.x = data.date
-          this.chartData.type = 'ohlc'
-        })
+        aggregate(toMonth, this.rawData).then( _setChartData )
       } else if (this.timeframe === 'y') {
-        aggregate(toYear, this.rawData).then( (data) => {
-          this.chartData = data
-          this.chartData.x = data.date
-          this.chartData.type = 'ohlc'
-        })
+        aggregate(toYear, this.rawData).then( _setChartData )
       } else {
         alert(`unimplemented timeframe [${this.timeframe}]`)
       }

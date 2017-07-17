@@ -1,8 +1,21 @@
-import Rx from 'rxjs/Rx'
+import { Observable } from 'rxjs/Observable'
+import 'rxjs/add/observable/from'
+import 'rxjs/add/observable/range'
+import 'rxjs/add/observable/zip'
+import 'rxjs/add/operator/toPromise'
+import 'rxjs/add/operator/toArray'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/groupby'
+import 'rxjs/add/operator/mergeMap'
+import 'rxjs/add/operator/reduce'
+import 'rxjs/add/operator/max'
+import 'rxjs/add/operator/min'
+import 'rxjs/add/operator/first'
+import 'rxjs/add/operator/share'
 
 export function aggregate(indexFunc, originalOHLC) {
-    const originalDateObservable = Rx.Observable.from(originalOHLC.date)
-    const dateWithIndex = Rx.Observable.zip(originalDateObservable, Rx.Observable.range(0, originalOHLC.date.length))
+    const originalDateObservable = Observable.from(originalOHLC.date)
+    const dateWithIndex = Observable.zip(originalDateObservable, Observable.range(0, originalOHLC.date.length))
     const groupedKeyDate = dateWithIndex.groupBy((item) => indexFunc(item[0]).getTime()).share()
 
     const open = groupedKeyDate.flatMap(group => group.reduce((acc, curr) => acc[0] < curr[0] ? acc : curr))
@@ -22,7 +35,7 @@ export function aggregate(indexFunc, originalOHLC) {
     const keyTime = groupedKeyDate.flatMap(group => group.first().map(item => indexFunc(item[0])))
                                   .toArray()
 
-    return Rx.Observable.zip(keyTime, open, high, low, close).map(item => {
+    return Observable.zip(keyTime, open, high, low, close).map(item => {
         return {
             date: item[0],
             open: item[1],
