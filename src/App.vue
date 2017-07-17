@@ -49,25 +49,38 @@ export default {
             high: data.high,
             type: 'ohlc'
           }
-          if (this.timeframe === 'd') {
-            this.chartData = this.rawData
-          } else if (this.timeframe === 'w') {
-            aggregate(toWeek, this.rawData).then( (data) => this.chartData = data )
-          } else if (this.timeframe === 'm') {
-            aggregate(toMonth, this.rawData).then( (data) => this.chartData = data )
-          } else if (this.timeframe === 'y') {
-            aggregate(toYear, this.rawData).then( (data) => this.chartData = data )
-          } else {
-            alert(`unimplemented timeframe [${this.timeframe}]`)
-          }
-          this.chartData = aggregate(this.rawData, this.timeframe)
+          this.chartData = this.rawData
+          this.chartData.x = this.rawData.date
+          this.chartData.type = 'ohlc'
         }
       )
     },
     timeframeChange() {
-      //this.chartData = aggregate(this.rawData, this.timeframe)
-      //console.log('chart', this.chartData)
-      //console.log('raw', this.rawData)
+      if (this.timeframe === 'd') {
+        this.chartData = this.rawData
+        this.chartData.x = this.rawData.date
+        this.chartData.type = 'ohlc'
+      } else if (this.timeframe === 'w') {
+        aggregate(toWeek, this.rawData).then( (data) => {
+          this.chartData = data
+          this.chartData.x = data.date
+          this.chartData.type = 'ohlc'
+        })
+      } else if (this.timeframe === 'm') {
+        aggregate(toMonth, this.rawData).then( (data) => {
+          this.chartData = data
+          this.chartData.x = data.date
+          this.chartData.type = 'ohlc'
+        })
+      } else if (this.timeframe === 'y') {
+        aggregate(toYear, this.rawData).then( (data) => {
+          this.chartData = data
+          this.chartData.x = data.date
+          this.chartData.type = 'ohlc'
+        })
+      } else {
+        alert(`unimplemented timeframe [${this.timeframe}]`)
+      }
     }
   }
 }
