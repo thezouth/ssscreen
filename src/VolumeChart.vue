@@ -1,11 +1,10 @@
 <template>
-    <div :style="elementStyle">
+    <div style="width: 100%, height: 500px">
     </div>
 </template>
 
 <script>
 import Plotly from 'plotly.js'
-import { OHLCModel } from './ohlc'
 
 const rangeSelector = {
     x: 0,
@@ -41,33 +40,8 @@ export default {
     props: {
         data: {
             type: Object
-        },
-
-        displayType: {
-            type: String,
-            default: function () { return 'ohlc' },
-            validator: function (value) { return ['ohlc', 'candlestick'].indexOf(value) >= 0 }
-        },
-
-        height: {
-            type: Number,
-            default: 500,
-            validator: function (value) { return value > 100 }
         }
     },
-
-    data: function () {
-        return {
-
-        }
-    },
-
-    computed: {
-        elementStyle: function () {
-            return `width: 100%; height: ${this.height}px`
-        }
-    },
-
     methods: {
         render: function () {
             if (!this.data)
@@ -75,11 +49,8 @@ export default {
 
             const chartData = {
                 x: this.data.date,
-                open: this.data.open,
-                high: this.data.high,
-                low: this.data.low,
-                close: this.data.close,
-                type: this.displayType
+                y: this.data.volume,
+                type: 'bar'
             }
 
             Plotly.newPlot(this.$el, [chartData], layout)
@@ -87,11 +58,13 @@ export default {
     },
 
     mounted: function () {
+        console.log('mount')
         this.render()
     },
 
     watch: {
         data: function () {
+            console.log('change')
             this.render()
         }
     }
@@ -101,3 +74,5 @@ export default {
 <style>
 
 </style>
+
+

@@ -19,6 +19,7 @@
                 <input @change="timeframeChange" type="radio" v-model="timeframe" :value="k"></input>{{ v }}</label>
         </div>
         <OHLCChart :data="chartData" displayType="ohlc"></OHLCChart>
+        <VolumeChart :data="chartData"></VolumeChart>
     </div>
 </template>
 
@@ -27,6 +28,7 @@ import { stockService } from './service'
 import { aggregate, toMonth, toWeek, toYear } from './ohlc'
 
 import OHLCChart from './OHLCChart.vue'
+import VolumeChart from './VolumeChart.vue'
 import { OHLCModel } from './ohlc'
 
 function convertDate(dateString) {
@@ -36,7 +38,7 @@ function convertDate(dateString) {
 
 export default {
     name: 'app',
-    components: { OHLCChart },
+    components: { OHLCChart, VolumeChart },
     data() {
         return {
             chartData: new OHLCModel(),
@@ -58,7 +60,8 @@ export default {
                         close: data.close,
                         open: data.open,
                         low: data.low,
-                        high: data.high
+                        high: data.high,
+                        volume: data.volume
                     }
                     this.setChartData(this.rawData)
                 }
