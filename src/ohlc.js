@@ -24,7 +24,7 @@ export class OHLCModel {
     }
 }
 
-export function aggregate(indexFunc, originalOHLC) {)
+export function aggregate(indexFunc, originalOHLC) {
     const originalDateObservable = Observable.from(originalOHLC.date)
     const dateWithIndex = Observable.zip(originalDateObservable, Observable.range(0, originalOHLC.date.length))
     const groupedKeyDate = dateWithIndex.groupBy((item) => indexFunc(item[0]).getTime()).share()
