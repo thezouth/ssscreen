@@ -13,6 +13,16 @@ import 'rxjs/add/operator/min'
 import 'rxjs/add/operator/first'
 import 'rxjs/add/operator/share'
 
+export class OHLCModel {
+    constructor(date, open, high, low, close) {
+        this.date = date
+        this.open = open
+        this.high = high
+        this.low = low
+        this.close = close
+    }
+}
+
 export function aggregate(indexFunc, originalOHLC) {
     const originalDateObservable = Observable.from(originalOHLC.date)
     const dateWithIndex = Observable.zip(originalDateObservable, Observable.range(0, originalOHLC.date.length))
@@ -31,18 +41,18 @@ export function aggregate(indexFunc, originalOHLC) {
 
     const low = groupedKeyDate.flatMap(group => group.map(item => originalOHLC.low[item[1]]).min())
                               .toArray()
-    
+
     const keyTime = groupedKeyDate.flatMap(group => group.first().map(item => indexFunc(item[0])))
                                   .toArray()
 
     return Observable.zip(keyTime, open, high, low, close).map(item => {
-        return {
-            date: item[0],
-            open: item[1],
-            high: item[2],
-            low: item[3],
-            close: item[4]
-        }
+        return new OHLCModel(
+            item[0],
+            item[1],
+            item[2],
+            item[3],
+            item[4]
+        )
     }).toPromise()
 }
 
@@ -55,6 +65,6 @@ export function toMonth(date) {
 }
 
 export function toYear(date) {
-    return new Date(date.getFullYear(), 1, 1)
+    return new Date(date.getFullYear(), 0, 1)
 }
 
