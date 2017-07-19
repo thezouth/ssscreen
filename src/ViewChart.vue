@@ -1,23 +1,54 @@
 <template>
-    <div id="app">
-        <h1 v-if="quote">{{ quote | upper }}</h1>
-        <h1 v-else>Enter quote</h1>
-        <div>
-            <span>symbol: </span>
-            <input @keypress.enter="change" ref="quote"></input>
+    <div>
+        <v-toolbar dark class="primary">
+            <v-toolbar-title>{{ quote | upper }}</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-text-field 
+                v-if="editQuote" 
+                hide-details
+                v-model="newQuote"
+                @keypress.native.enter="change"
+                id="input-search-quote"
+                placeholder="Enter Quote" 
+                ref="inputSearchQuote">
+            </v-text-field>
+            <v-btn icon @click.native="onSearch">
+                <v-icon>search</v-icon>
+            </v-btn>
+            <v-btn icon @click.native="showPanel = !showPanel">
+                <v-icon>settings</v-icon>
+            </v-btn>
+        </v-toolbar>
+        
+        <v-card v-if="showPanel">
+            <v-card-title primary-title>
+                <h3 class="headline">Settings</h3>
+            </v-card-title>
+            <v-card-text>
+                <v-slider 
+                    label="Period" 
+                    v-model="sampleCount"
+                    :max="2000"
+                    :min="100"
+                    step="100"
+                    snap
+                    thumb-label>
+                </v-slider>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn flat primary>Save</v-btn>
+                <v-btn flat @click.native="showPanel = false">Cancel</v-btn>
+            </v-card-actions>
+        </v-card>
+        
+        <div class="text-xs-center" style="padding: 10px">
+            <v-btn flat :key="k" v-for="(v, k) in {d: 'Day', w: 'Week', m: 'Month', y: 'Year'}"
+                :value="timeframe === k"
+                @click.native="timeframeChange(k)">
+                <span>{{ v }}</span>
+            </v-btn>
         </div>
-        <div>
-            <span>sample count: </span>
-            <input type="number" @keypress.enter="change" v-model="sampleCount"></input>
-        </div>
-        <div>
-            <button name="search" @click="change">search</button>
-        </div>
-        <hr/>
-        <div v-if="quote">
-            <label :key="k" v-for="(v, k) in {d: 'Day', w: 'Week', m: 'Month', y: 'Year'}">
-                <input @change="timeframeChange" type="radio" v-model="timeframe" :value="k"></input>{{ v }}</label>
-        </div>
+        
         <OHLCChart :data="chartData" displayType="ohlc"></OHLCChart>
         <VolumeChart :data="chartData"></VolumeChart>
     </div>
@@ -64,7 +95,12 @@ export default {
         return {
             chartData: new OHLCModel(),
             sampleCount: 200,
-            timeframe: 'd'
+            timeframe: 'd',
+
+            editQuote: false,
+            newQuote: "",
+
+            showPanel: false
         }
     },
 
@@ -97,29 +133,27 @@ export default {
     methods: {
         setRawData: function (rawData) {
             this.rawData = rawData
-            this.timeframeChange()
+            this.timeframeChange(this.timeframe)
+            this.editQuote = false
+            this.newQuote = ""
+        },
+
+        onSearch: function () {
+            if (this.editQuote) {
+                this.change()
+            } else {
+                this.editQuote = true
+            }
         },
 
         change() {
-            this.quote = this.$refs.quote.value
-            if (!this.quote) return;
-            stockService.get(`/historical/${this.quote}?count=${this.sampleCount}`).then(
-                (response) => {
-                    const data = response.data.data
-                    this.rawData = {
-                        date: data.sample_date.map(convertDate),
-                        close: data.close,
-                        open: data.open,
-                        low: data.low,
-                        high: data.high,
-                        volume: data.volume
-                    }
-                    this.setChartData(this.rawData)
-                }
-            )
+            const quote = this.newQuote
+            if (!quote) return;
+            this.$router.push({ name: "stock-chart", params: { quote: quote }})
         },
 
-        timeframeChange() {
+        timeframeChange(newTimeframe) {
+            this.timeframe = newTimeframe
             if (this.timeframe === 'd') {
                 this.setChartData(this.rawData)
             } else if (this.timeframe === 'w') {
@@ -139,3 +173,9 @@ export default {
     }
 }
 </script>
+
+<style>
+#input-search-quote {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+</style>
