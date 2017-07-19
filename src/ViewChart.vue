@@ -1,5 +1,5 @@
 <template>
-     <div id="app">
+    <div id="app">
         <h1 v-if="quote">{{ quote | upper }}</h1>
         <h1 v-else>Enter quote</h1>
         <div>
@@ -36,9 +36,29 @@ function convertDate(dateString) {
     return new Date(parseInt(arr[2]), parseInt(arr[1]) - 1, parseInt(arr[0]))
 }
 
+function fetchOHLCVData(quote, count) {
+    count = count || 200
+
+    return stockService.get(`/historical/${quote}?count=${200}`).then(
+        (response) => {
+            const data = response.data.data
+            const formattedData = {
+                date: data.sample_date.map(convertDate),
+                open: data.open,
+                high: data.high,
+                close: data.close,
+                low: data.low,
+                volume: data.volume
+            }
+
+            return formattedData
+        }
+    )
+}
+
 export default {
     name: 'app',
-    props: [ 'quote' ],
+    props: ['quote'],
     components: { OHLCChart, VolumeChart },
     data() {
         return {
@@ -48,7 +68,38 @@ export default {
         }
     },
 
+    beforeRouteEnter: function (to, from, next) {
+        const quote = to.params.quote
+
+        fetchOHLCVData(quote).then(
+            (data) => { next((vm) => vm.setRawData(data)) }
+        ).catch((err) => {
+            alert('cannot fetch data.')
+            next(false)
+        })
+    },
+
+    beforeRouteUpdate: function (to, from, next) {
+        const quote = to.params.quote
+        const count = this.sampleCount
+
+        fetchOHLCVData(quote, count).then(
+            (data) => {
+                this.setRawData(data)
+                next()
+            }
+        ).catch((err) => {
+            alert('cannot fetch data.')
+            next(false)
+        })
+    },
+
     methods: {
+        setRawData: function (rawData) {
+            this.rawData = rawData
+            this.timeframeChange()
+        },
+
         change() {
             this.quote = this.$refs.quote.value
             if (!this.quote) return;
@@ -67,6 +118,7 @@ export default {
                 }
             )
         },
+
         timeframeChange() {
             if (this.timeframe === 'd') {
                 this.setChartData(this.rawData)
@@ -80,6 +132,7 @@ export default {
                 alert(`unimplemented timeframe [${this.timeframe}]`)
             }
         },
+
         setChartData(data) {
             this.chartData = data
         }
